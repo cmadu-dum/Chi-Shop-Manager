@@ -1,0 +1,5 @@
+{
+  "name": "Shop Manager",
+  "description": "A web application for shop owners to record sales and expenses, calculate profit/loss, and view daily and weekly summaries.",
+  "requestFramePermissions": []
+}

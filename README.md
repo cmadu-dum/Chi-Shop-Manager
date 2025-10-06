@@ -54,3 +54,4 @@ The project is organized into logical directories to maintain clean and scalable
 -   **State Management:** The application uses React's Context API (`DataContext`) as a centralized store. This provider handles all data (transactions, products), business logic, and interactions with the storage service, making the state accessible throughout the component tree.
 -   **Data Persistence:** `localforage` is used to provide a simple, asynchronous key-value storage API. It intelligently chooses the best backend available in the browser (IndexedDB by default), ensuring that all your shop data is saved persistently and is available offline.
 -   **Routing:** Client-side navigation is handled by `react-router-dom` using `HashRouter`, which is ideal for static web apps that don't have a server configured for deep linking.
+website https://chi-shop-manager.vercel.app/

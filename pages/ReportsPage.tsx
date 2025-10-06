@@ -1,25 +1,28 @@
 
 import React, { useMemo } from 'react';
-import { useTransactions } from '../hooks/useTransactions';
+import { useData } from '../hooks/useData';
 import { isToday, isThisWeek, parseISO } from 'date-fns';
 import SummaryCard from '../components/SummaryCard';
 import TransactionList from '../components/TransactionList';
 import type { Transaction } from '../types';
 
 const ReportsPage: React.FC = () => {
-  const { transactions, loading, error } = useTransactions();
+  const { transactions, loading, error } = useData();
 
   const calculateSummary = (filteredTransactions: Transaction[]) => {
     return filteredTransactions.reduce(
       (acc, tx) => {
         if (tx.type === 'sale') {
           acc.totalSales += tx.amount;
+          if (tx.profit !== undefined) {
+             acc.cogs += (tx.amount - tx.profit);
+          }
         } else {
           acc.totalExpenses += tx.amount;
         }
         return acc;
       },
-      { totalSales: 0, totalExpenses: 0 }
+      { totalSales: 0, totalExpenses: 0, cogs: 0 }
     );
   };
 
@@ -54,7 +57,7 @@ const ReportsPage: React.FC = () => {
         <SummaryCard 
           title="Today's Summary" 
           totalSales={todaySummary.totalSales} 
-          totalExpenses={todaySummary.totalExpenses} 
+          totalExpenses={todaySummary.totalExpenses + todaySummary.cogs} 
         />
         <div>
             <h3 className="text-xl font-semibold text-slate-800 mb-4">Today's Transactions</h3>
@@ -66,7 +69,7 @@ const ReportsPage: React.FC = () => {
         <SummaryCard 
           title="This Week's Summary" 
           totalSales={thisWeekSummary.totalSales} 
-          totalExpenses={thisWeekSummary.totalExpenses} 
+          totalExpenses={thisWeekSummary.totalExpenses + thisWeekSummary.cogs} 
         />
          <div>
             <h3 className="text-xl font-semibold text-slate-800 mb-4">This Week's Transactions</h3>

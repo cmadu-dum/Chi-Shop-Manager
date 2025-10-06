@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { HomeIcon, PlusCircleIcon, BarChartIcon } from './icons';
+import { HomeIcon, PlusCircleIcon, BarChartIcon, BoxIcon, ShoppingCartIcon } from './icons';
 
 const Navbar: React.FC = () => {
   const linkClasses = "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors";
@@ -15,10 +15,18 @@ const Navbar: React.FC = () => {
           <div className="flex items-center">
             <h1 className="text-xl font-bold text-slate-900">Shop Manager</h1>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1 sm:gap-2">
             <NavLink to="/" className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`}>
               <HomeIcon className="h-5 w-5" />
               <span className="hidden sm:inline">Home</span>
+            </NavLink>
+             <NavLink to="/sell" className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`}>
+              <ShoppingCartIcon className="h-5 w-5" />
+              <span className="hidden sm:inline">Sell</span>
+            </NavLink>
+            <NavLink to="/products" className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`}>
+              <BoxIcon className="h-5 w-5" />
+              <span className="hidden sm:inline">Products</span>
             </NavLink>
             <NavLink to="/add" className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`}>
               <PlusCircleIcon className="h-5 w-5" />

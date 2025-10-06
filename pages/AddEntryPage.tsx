@@ -1,18 +1,18 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTransactions } from '../hooks/useTransactions';
-import type { TransactionType, TransactionCategory } from '../types';
+import { useData } from '../hooks/useData';
+import type { TransactionType, TransactionCategory, SaleCategory, ExpenseCategory } from '../types';
 import { SALE_CATEGORIES, EXPENSE_CATEGORIES } from '../constants';
 
 const AddEntryPage: React.FC = () => {
-  const { addTransaction } = useTransactions();
+  const { addTransaction } = useData();
   const navigate = useNavigate();
 
-  const [type, setType] = useState<TransactionType>('sale');
+  const [type, setType] = useState<TransactionType>('expense');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<TransactionCategory>(SALE_CATEGORIES[0]);
+  const [category, setCategory] = useState<TransactionCategory>(EXPENSE_CATEGORIES[0]);
   const [error, setError] = useState('');
 
   const handleTypeChange = (newType: TransactionType) => {
@@ -33,34 +33,28 @@ const AddEntryPage: React.FC = () => {
     }
     
     setError('');
-    await addTransaction({
-      type,
-      amount: numericAmount,
-      description,
-      category,
-    });
-    
-    navigate('/');
+    try {
+        await addTransaction({
+            type,
+            amount: numericAmount,
+            description,
+            category,
+        });
+        navigate('/');
+    } catch (err) {
+        setError('Failed to save entry. Please try again.');
+    }
   };
 
   const categories = type === 'sale' ? SALE_CATEGORIES : EXPENSE_CATEGORIES;
 
   return (
     <div className="max-w-xl mx-auto">
-        <h2 className="text-3xl font-bold text-slate-900 mb-2">Add New Entry</h2>
-        <p className="text-slate-600 mb-8">Record a new sale or expense for your shop.</p>
+        <h2 className="text-3xl font-bold text-slate-900 mb-2">Add Entry</h2>
+        <p className="text-slate-600 mb-8">Record a non-product sale (e.g., a service) or an expense.</p>
       
         <div className="bg-white p-8 rounded-xl shadow-md border border-slate-200">
             <div className="mb-6 grid grid-cols-2 gap-4">
-                <button
-                    type="button"
-                    onClick={() => handleTypeChange('sale')}
-                    className={`px-4 py-3 rounded-lg font-semibold text-center transition-colors ${
-                    type === 'sale' ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                    }`}
-                >
-                    Sale
-                </button>
                 <button
                     type="button"
                     onClick={() => handleTypeChange('expense')}
@@ -69,6 +63,15 @@ const AddEntryPage: React.FC = () => {
                     }`}
                 >
                     Expense
+                </button>
+                <button
+                    type="button"
+                    onClick={() => handleTypeChange('sale')}
+                    className={`px-4 py-3 rounded-lg font-semibold text-center transition-colors ${
+                    type === 'sale' ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                >
+                    Service/Other Sale
                 </button>
             </div>
 
@@ -103,7 +106,7 @@ const AddEntryPage: React.FC = () => {
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        placeholder={type === 'sale' ? 'e.g., Coffee beans sale' : 'e.g., Electricity bill'}
+                        placeholder={type === 'sale' ? 'e.g., Consulting service' : 'e.g., Electricity bill'}
                     />
                 </div>
 
@@ -114,7 +117,7 @@ const AddEntryPage: React.FC = () => {
                     <select
                         id="category"
                         value={category}
-                        onChange={(e) => setCategory(e.target.value as TransactionCategory)}
+                        onChange={(e) => setCategory(e.target.value as SaleCategory | ExpenseCategory)}
                         className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                     >
                         {categories.map((cat) => (

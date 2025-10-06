@@ -1,15 +1,17 @@
 
 import localforage from 'localforage';
-import type { Transaction } from '../types';
+import type { Transaction, Product } from '../types';
 
 const TRANSACTIONS_KEY = 'shop-manager-transactions';
+const PRODUCTS_KEY = 'shop-manager-products';
 
 localforage.config({
   name: 'ShopManagerDB',
-  storeName: 'transactions',
-  description: 'Stores shop sales and expenses data'
+  storeName: 'data',
+  description: 'Stores shop data'
 });
 
+// Transactions ---
 export const getTransactions = async (): Promise<Transaction[]> => {
   const transactions = await localforage.getItem<Transaction[]>(TRANSACTIONS_KEY);
   return transactions || [];
@@ -19,9 +21,12 @@ export const saveTransactions = async (transactions: Transaction[]): Promise<Tra
   return await localforage.setItem(TRANSACTIONS_KEY, transactions);
 };
 
-export const addTransaction = async (transaction: Transaction): Promise<Transaction> => {
-  const transactions = await getTransactions();
-  const updatedTransactions = [...transactions, transaction];
-  await saveTransactions(updatedTransactions);
-  return transaction;
-};
+// Products ---
+export const getProducts = async (): Promise<Product[]> => {
+    const products = await localforage.getItem<Product[]>(PRODUCTS_KEY);
+    return products || [];
+}
+
+export const saveProducts = async (products: Product[]): Promise<Product[]> => {
+    return await localforage.setItem(PRODUCTS_KEY, products);
+}

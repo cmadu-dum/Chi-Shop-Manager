@@ -1,15 +1,17 @@
 
 import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
-import { TransactionsProvider } from './context/TransactionsContext';
+import { DataProvider } from './context/DataContext';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import AddEntryPage from './pages/AddEntryPage';
 import ReportsPage from './pages/ReportsPage';
+import ProductsPage from './pages/ProductsPage';
+import SellPage from './pages/SellPage';
 
 const App: React.FC = () => {
   return (
-    <TransactionsProvider>
+    <DataProvider>
       <HashRouter>
         <div className="min-h-screen flex flex-col">
           <Navbar />
@@ -18,11 +20,13 @@ const App: React.FC = () => {
               <Route path="/" element={<HomePage />} />
               <Route path="/add" element={<AddEntryPage />} />
               <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/products" element={<ProductsPage />} />
+              <Route path="/sell" element={<SellPage />} />
             </Routes>
           </main>
         </div>
       </HashRouter>
-    </TransactionsProvider>
+    </DataProvider>
   );
 };
 

@@ -1,9 +1,11 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { HomeIcon, PlusCircleIcon, BarChartIcon, BoxIcon, ShoppingCartIcon } from './icons';
 
 const Navbar: React.FC = () => {
+  const { signOut } = useAuth();
   const linkClasses = "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors";
   const activeLinkClasses = "bg-slate-200 text-slate-900";
   const inactiveLinkClasses = "text-slate-600 hover:bg-slate-200/50 hover:text-slate-900";
@@ -36,6 +38,13 @@ const Navbar: React.FC = () => {
               <BarChartIcon className="h-5 w-5" />
               <span className="hidden sm:inline">Reports</span>
             </NavLink>
+            <button
+              onClick={signOut}
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 transition-colors"
+            >
+              <span className="hidden sm:inline">Sign Out</span>
+              <span className="sm:hidden">Exit</span>
+            </button>
           </div>
         </div>
       </nav>

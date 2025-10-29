@@ -13,6 +13,17 @@ const ProductsPage: React.FC = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    const handlePurchasePriceChange = (value: string) => {
+        setPurchasePrice(value);
+        const pp = parseFloat(value);
+        if (!isNaN(pp) && pp > 0) {
+            const calculatedSellingPrice = (pp * 1.2).toFixed(2);
+            setSellingPrice(calculatedSellingPrice);
+        } else {
+            setSellingPrice('');
+        }
+    };
+
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
     };
@@ -71,11 +82,11 @@ const ProductsPage: React.FC = () => {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label htmlFor="purchasePrice" className="block text-sm font-medium text-slate-700 mb-1">Purchase Price ($)</label>
-                                <input type="number" id="purchasePrice" value={purchasePrice} onChange={e => setPurchasePrice(e.target.value)} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="10.00" step="0.01"/>
+                                <input type="number" id="purchasePrice" value={purchasePrice} onChange={e => handlePurchasePriceChange(e.target.value)} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="10.00" step="0.01"/>
                             </div>
                             <div>
-                                <label htmlFor="sellingPrice" className="block text-sm font-medium text-slate-700 mb-1">Selling Price ($)</label>
-                                <input type="number" id="sellingPrice" value={sellingPrice} onChange={e => setSellingPrice(e.target.value)} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="15.00" step="0.01"/>
+                                <label htmlFor="sellingPrice" className="block text-sm font-medium text-slate-700 mb-1">Selling Price ($) <span className="text-xs text-slate-500">(20% markup)</span></label>
+                                <input type="number" id="sellingPrice" value={sellingPrice} onChange={e => setSellingPrice(e.target.value)} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="12.00" step="0.01"/>
                             </div>
                         </div>
                         <div>

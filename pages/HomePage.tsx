@@ -46,15 +46,35 @@ const HomePage: React.FC = () => {
       </div>
 
       {lowStockProducts.length > 0 && (
-        <div className="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4 rounded-md shadow-sm" role="alert">
-          <div className="flex">
-            <div className="py-1"><AlertTriangleIcon className="h-6 w-6 text-orange-500 mr-4"/></div>
-            <div>
-              <p className="font-bold">Low Stock Alert</p>
-              <p className="text-sm">
-                You have {lowStockProducts.length} item(s) running low. 
-                <Link to="/products" className="font-medium underline ml-2">View Products</Link>
+        <div className="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-400 rounded-xl shadow-lg p-6 animate-pulse" role="alert">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 bg-orange-500 rounded-full p-3">
+              <AlertTriangleIcon className="h-8 w-8 text-white"/>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-orange-800 mb-2">Low Stock Alert!</h3>
+              <p className="text-orange-700 mb-3">
+                {lowStockProducts.length} product{lowStockProducts.length > 1 ? 's are' : ' is'} running low on inventory. Restock soon to avoid stockouts!
               </p>
+              <div className="space-y-2 mb-4">
+                {lowStockProducts.map((product) => (
+                  <div key={product.id} className="flex items-center justify-between bg-white/70 rounded-lg px-4 py-2 border border-orange-200">
+                    <div className="flex items-center gap-2">
+                      <BoxIcon className="h-5 w-5 text-orange-600" />
+                      <span className="font-semibold text-slate-800">{product.name}</span>
+                    </div>
+                    <span className="text-sm font-bold text-orange-600">
+                      Only {product.stock} left
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <Link
+                to="/products"
+                className="inline-block bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors shadow-md"
+              >
+                Manage Inventory
+              </Link>
             </div>
           </div>
         </div>

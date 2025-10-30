@@ -5,6 +5,33 @@ export interface Product {
   purchasePrice: number;
   sellingPrice: number;
   stock: number;
+  weightedAvgCost?: number;
+  lastRestockDate?: string;
+  restockCount?: number;
+}
+
+export interface RestockHistory {
+  id: string;
+  productId: string;
+  quantityAdded: number;
+  purchasePrice: number;
+  sellingPrice: number;
+  previousStock: number;
+  newStock: number;
+  previousAvgCost: number;
+  newAvgCost: number;
+  supplier?: string;
+  notes?: string;
+  userId: string;
+  createdAt: string;
+}
+
+export interface PriceHistoryPoint {
+  date: string;
+  purchasePrice: number;
+  sellingPrice: number;
+  avgCost: number;
+  quantity: number;
 }
 
 export type TransactionType = 'sale' | 'expense';

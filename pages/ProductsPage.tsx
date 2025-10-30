@@ -3,15 +3,21 @@ import React, { useState } from 'react';
 import { useData } from '../hooks/useData';
 import { LOW_STOCK_THRESHOLD } from '../constants';
 import { AlertTriangleIcon } from '../components/icons';
+import { calculateProfitMargin } from '../utils/priceCalculations';
 
 const ProductsPage: React.FC = () => {
-    const { products, addProduct, loading } = useData();
+    const { products, addProduct, restockProduct, loading } = useData();
     const [name, setName] = useState('');
     const [purchasePrice, setPurchasePrice] = useState('');
     const [sellingPrice, setSellingPrice] = useState('');
     const [stock, setStock] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [restockingProductId, setRestockingProductId] = useState<string | null>(null);
+    const [restockQuantity, setRestockQuantity] = useState('');
+    const [restockPurchasePrice, setRestockPurchasePrice] = useState('');
+    const [restockSellingPrice, setRestockSellingPrice] = useState('');
+    const [restockNotes, setRestockNotes] = useState('');
 
     const handlePurchasePriceChange = (value: string) => {
         setPurchasePrice(value);
@@ -58,13 +64,60 @@ const ProductsPage: React.FC = () => {
                 stock: st
             });
             setSuccess(`Product "${name}" added successfully!`);
-            // Reset form
             setName('');
             setPurchasePrice('');
             setSellingPrice('');
             setStock('');
         } catch (err) {
             setError('Failed to add product. Please try again.');
+        }
+    };
+
+    const startRestock = (productId: string, currentPrice: number, currentSellingPrice: number) => {
+        setRestockingProductId(productId);
+        setRestockPurchasePrice(currentPrice.toString());
+        setRestockSellingPrice(currentSellingPrice.toString());
+        setRestockQuantity('');
+        setRestockNotes('');
+        setError('');
+        setSuccess('');
+    };
+
+    const handleRestock = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!restockingProductId) return;
+
+        setError('');
+        setSuccess('');
+
+        const qty = parseInt(restockQuantity, 10);
+        const pp = parseFloat(restockPurchasePrice);
+        const sp = parseFloat(restockSellingPrice);
+
+        if (isNaN(qty) || isNaN(pp) || isNaN(sp)) {
+            setError('All fields are required and must be valid numbers.');
+            return;
+        }
+        if (qty <= 0 || pp <= 0 || sp <= 0) {
+            setError('Quantity and prices must be positive.');
+            return;
+        }
+        if (sp < pp) {
+            setError('Selling price should not be less than purchase price.');
+            return;
+        }
+
+        try {
+            await restockProduct(restockingProductId, qty, pp, sp, restockNotes || undefined);
+            const product = products.find(p => p.id === restockingProductId);
+            setSuccess(`Successfully restocked "${product?.name}"!`);
+            setRestockingProductId(null);
+            setRestockQuantity('');
+            setRestockPurchasePrice('');
+            setRestockSellingPrice('');
+            setRestockNotes('');
+        } catch (err) {
+            setError('Failed to restock product. Please try again.');
         }
     };
 
@@ -112,20 +165,34 @@ const ProductsPage: React.FC = () => {
                                 const isLowStock = p.stock < LOW_STOCK_THRESHOLD;
                                 const profit = p.sellingPrice - p.purchasePrice;
 
+                                const marginPercent = calculateProfitMargin(p.sellingPrice, p.weightedAvgCost || p.purchasePrice);
+                                const isRestocking = restockingProductId === p.id;
+
                                 return (
                                 <li key={p.id} className={`p-4 ${isLowStock ? 'bg-orange-50' : ''}`}>
                                     <div className="flex items-center justify-between">
-                                        <div>
+                                        <div className="flex-1">
                                             <p className="font-bold text-slate-800">{p.name}</p>
                                             <p className="text-sm text-slate-500">
-                                                <span>Price: <span className="font-medium text-slate-700">{formatCurrency(p.sellingPrice)}</span></span> &bull; 
+                                                <span>Price: <span className="font-medium text-slate-700">{formatCurrency(p.sellingPrice)}</span></span> &bull;
                                                 <span> Cost: <span className="font-medium text-slate-700">{formatCurrency(p.purchasePrice)}</span></span> &bull;
                                                 <span> Profit: <span className="font-medium text-green-600">{formatCurrency(profit)}</span></span>
                                             </p>
+                                            {p.weightedAvgCost && p.weightedAvgCost !== p.purchasePrice && (
+                                                <p className="text-xs text-slate-500 mt-1">
+                                                    Avg Cost: {formatCurrency(p.weightedAvgCost)} &bull; Margin: {marginPercent.toFixed(1)}%
+                                                </p>
+                                            )}
                                         </div>
-                                        <div className="text-right">
+                                        <div className="text-right ml-4">
                                             <p className={`font-bold text-lg ${isLowStock ? 'text-orange-600' : 'text-slate-800'}`}>{p.stock}</p>
                                             <p className="text-sm text-slate-500">in stock</p>
+                                            <button
+                                                onClick={() => startRestock(p.id, p.purchasePrice, p.sellingPrice)}
+                                                className="mt-2 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                            >
+                                                + Restock
+                                            </button>
                                         </div>
                                     </div>
                                     {isLowStock && (
@@ -139,6 +206,76 @@ const ProductsPage: React.FC = () => {
                         </ul>
                     )}
                 </div>
+                {restockingProductId && (
+                    <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6">
+                        <div className="flex justify-between items-start mb-4">
+                            <h3 className="text-xl font-bold text-slate-900">
+                                Restock: {products.find(p => p.id === restockingProductId)?.name}
+                            </h3>
+                            <button
+                                onClick={() => setRestockingProductId(null)}
+                                className="text-slate-500 hover:text-slate-700"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <form onSubmit={handleRestock} className="space-y-4">
+                            <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
+                                    <input
+                                        type="number"
+                                        value={restockQuantity}
+                                        onChange={e => setRestockQuantity(e.target.value)}
+                                        className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        placeholder="50"
+                                        step="1"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Purchase Price ($)</label>
+                                    <input
+                                        type="number"
+                                        value={restockPurchasePrice}
+                                        onChange={e => setRestockPurchasePrice(e.target.value)}
+                                        className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        placeholder="10.00"
+                                        step="0.01"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Selling Price ($)</label>
+                                    <input
+                                        type="number"
+                                        value={restockSellingPrice}
+                                        onChange={e => setRestockSellingPrice(e.target.value)}
+                                        className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        placeholder="12.00"
+                                        step="0.01"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Notes (optional)</label>
+                                <input
+                                    type="text"
+                                    value={restockNotes}
+                                    onChange={e => setRestockNotes(e.target.value)}
+                                    className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                    placeholder="e.g., New supplier, price increase"
+                                />
+                            </div>
+                            {error && <p className="text-sm text-red-600">{error}</p>}
+                            {success && <p className="text-sm text-green-600">{success}</p>}
+                            <button
+                                type="submit"
+                                className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium"
+                            >
+                                Add Stock
+                            </button>
+                        </form>
+                    </div>
+                )}
             </div>
         </div>
     );

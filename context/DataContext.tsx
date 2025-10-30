@@ -9,6 +9,7 @@ interface DataContextType {
   products: Product[];
   addTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'productId' | 'quantity' | 'profit'>) => Promise<void>;
   addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
+  restockProduct: (productId: string, quantity: number, purchasePrice: number, sellingPrice: number, notes?: string) => Promise<void>;
   sellProduct: (productId: string, quantity: number) => Promise<void>;
   lowStockProducts: Product[];
   loading: boolean;
@@ -70,6 +71,17 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     }
   }, []);
 
+  const restockProduct = useCallback(async (productId: string, quantity: number, purchasePrice: number, sellingPrice: number, notes?: string) => {
+    try {
+        const { product: updatedProduct } = await productApi.restock(productId, quantity, purchasePrice, sellingPrice, notes);
+        setProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p));
+    } catch(e) {
+        setError('Failed to restock product.');
+        console.error(e);
+        throw e;
+    }
+  }, []);
+
   const sellProduct = useCallback(async (productId: string, quantity: number) => {
     try {
         const { product: updatedProduct, transaction: newTransaction } = await salesApi.sell(productId, quantity);
@@ -87,7 +99,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   }, [products]);
 
   return (
-    <DataContext.Provider value={{ transactions, products, addTransaction, addProduct, sellProduct, lowStockProducts, loading, error }}>
+    <DataContext.Provider value={{ transactions, products, addTransaction, addProduct, restockProduct, sellProduct, lowStockProducts, loading, error }}>
       {children}
     </DataContext.Provider>
   );

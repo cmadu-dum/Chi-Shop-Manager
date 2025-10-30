@@ -1,13 +1,15 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useData } from '../hooks/useData';
 import { isToday, isThisWeek, parseISO } from 'date-fns';
 import SummaryCard from '../components/SummaryCard';
 import TransactionList from '../components/TransactionList';
+import PriceHistoryChart from '../components/PriceHistoryChart';
 import type { Transaction } from '../types';
 
 const ReportsPage: React.FC = () => {
-  const { transactions, loading, error } = useData();
+  const { transactions, products, loading, error } = useData();
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
   const calculateSummary = (filteredTransactions: Transaction[]) => {
     return filteredTransactions.reduce(
@@ -54,10 +56,10 @@ const ReportsPage: React.FC = () => {
       </div>
 
       <div className="space-y-8">
-        <SummaryCard 
-          title="Today's Summary" 
-          totalSales={todaySummary.totalSales} 
-          totalExpenses={todaySummary.totalExpenses + todaySummary.cogs} 
+        <SummaryCard
+          title="Today's Summary"
+          totalSales={todaySummary.totalSales}
+          totalExpenses={todaySummary.totalExpenses + todaySummary.cogs}
         />
         <div>
             <h3 className="text-xl font-semibold text-slate-800 mb-4">Today's Transactions</h3>
@@ -66,15 +68,45 @@ const ReportsPage: React.FC = () => {
       </div>
 
       <div className="space-y-8">
-        <SummaryCard 
-          title="This Week's Summary" 
-          totalSales={thisWeekSummary.totalSales} 
-          totalExpenses={thisWeekSummary.totalExpenses + thisWeekSummary.cogs} 
+        <SummaryCard
+          title="This Week's Summary"
+          totalSales={thisWeekSummary.totalSales}
+          totalExpenses={thisWeekSummary.totalExpenses + thisWeekSummary.cogs}
         />
          <div>
             <h3 className="text-xl font-semibold text-slate-800 mb-4">This Week's Transactions</h3>
             <TransactionList transactions={thisWeekTransactions} />
         </div>
+      </div>
+
+      <div className="space-y-8">
+        <div>
+          <h3 className="text-2xl font-bold text-slate-900 mb-2">Price Analytics</h3>
+          <p className="text-slate-600 mb-6">Track price changes and forecast trends for data science analysis.</p>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-lg p-6">
+          <label className="block text-sm font-medium text-slate-700 mb-2">Select Product</label>
+          <select
+            value={selectedProductId || ''}
+            onChange={(e) => setSelectedProductId(e.target.value || null)}
+            className="block w-full max-w-md rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          >
+            <option value="">Choose a product to view price history...</option>
+            {products.map(product => (
+              <option key={product.id} value={product.id}>
+                {product.name} {product.restockCount ? `(${product.restockCount} restocks)` : '(No restocks yet)'}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {selectedProductId && (
+          <PriceHistoryChart
+            productId={selectedProductId}
+            productName={products.find(p => p.id === selectedProductId)?.name || ''}
+          />
+        )}
       </div>
     </div>
   );

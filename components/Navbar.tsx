@@ -2,7 +2,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { HomeIcon, PlusCircleIcon, BarChartIcon, BoxIcon, ShoppingCartIcon } from './icons';
+import { HomeIcon, PlusCircleIcon, BarChartIcon, BoxIcon, ShoppingCartIcon, FileTextIcon } from './icons';
 
 const Navbar: React.FC = () => {
   const { signOut } = useAuth();
@@ -37,6 +37,10 @@ const Navbar: React.FC = () => {
             <NavLink to="/reports" className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`}>
               <BarChartIcon className="h-5 w-5" />
               <span className="hidden sm:inline">Reports</span>
+            </NavLink>
+            <NavLink to="/inventory-report" className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`}>
+              <FileTextIcon className="h-5 w-5" />
+              <span className="hidden sm:inline">Inventory</span>
             </NavLink>
             <button
               onClick={signOut}

@@ -10,6 +10,7 @@ import AddEntryPage from './pages/AddEntryPage';
 import ReportsPage from './pages/ReportsPage';
 import ProductsPage from './pages/ProductsPage';
 import SellPage from './pages/SellPage';
+import InventoryReportPage from './pages/InventoryReportPage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
 
@@ -34,6 +35,7 @@ const App: React.FC = () => {
                         <Route path="/reports" element={<ReportsPage />} />
                         <Route path="/products" element={<ProductsPage />} />
                         <Route path="/sell" element={<SellPage />} />
+                        <Route path="/inventory-report" element={<InventoryReportPage />} />
                       </Routes>
                     </main>
                   </div>

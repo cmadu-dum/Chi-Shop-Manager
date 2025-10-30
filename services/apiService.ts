@@ -23,6 +23,16 @@ export const productApi = {
   },
 
   async create(product: Omit<Product, 'id'>): Promise<Product> {
+    const { data: existingProduct } = await supabase
+      .from('products')
+      .select('name')
+      .ilike('name', product.name)
+      .maybeSingle();
+
+    if (existingProduct) {
+      throw new Error(`A product with the name "${product.name}" already exists. Please use a unique name.`);
+    }
+
     const { data, error } = await supabase
       .from('products')
       .insert({

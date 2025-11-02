@@ -132,6 +132,19 @@ const InventoryReportPage: React.FC = () => {
       .map(product => {
         const currentStock = product.stock;
 
+        const firstRestockDate = restockHistory
+          .filter(restock => restock.productId === product.id)
+          .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())[0]?.createdAt;
+
+        if (!firstRestockDate) {
+          return null;
+        }
+
+        const productCreatedDate = parseISO(firstRestockDate);
+        if (isAfter(productCreatedDate, reportEnd)) {
+          return null;
+        }
+
         const salesAfterEndDate = transactions.filter(tx => {
           if (!tx.productId || tx.productId !== product.id || tx.type !== 'sale') return false;
           const txDate = parseISO(tx.date);
@@ -149,6 +162,10 @@ const InventoryReportPage: React.FC = () => {
 
         const stockAtEndDate = currentStock - purchasesAfter + salesAfter;
 
+        if (stockAtEndDate <= 0) {
+          return null;
+        }
+
         const avgCost = product.weightedAvgCost || product.purchasePrice;
 
         return {
@@ -161,7 +178,7 @@ const InventoryReportPage: React.FC = () => {
           potentialRevenue: stockAtEndDate * product.sellingPrice
         };
       })
-      .filter(item => item.stockAtEndDate > 0)
+      .filter(item => item !== null)
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [products, transactions, restockHistory, endDate]);
 

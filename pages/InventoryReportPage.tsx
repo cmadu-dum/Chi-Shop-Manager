@@ -17,6 +17,7 @@ interface InventoryMovement {
   openingValue: number;
   purchaseValue: number;
   closingValue: number;
+  dateAdded?: string;
 }
 
 const InventoryReportPage: React.FC = () => {
@@ -107,7 +108,8 @@ const InventoryReportPage: React.FC = () => {
           unitPrice: product.sellingPrice,
           openingValue: Math.max(0, openingStock) * avgCost,
           purchaseValue: restocksInPeriod.reduce((sum, r) => sum + (r.quantityAdded * r.purchasePrice), 0),
-          closingValue: closingStock * avgCost
+          closingValue: closingStock * avgCost,
+          dateAdded: product.createdAt
         };
       }
     });
@@ -180,7 +182,8 @@ const InventoryReportPage: React.FC = () => {
           totalValue: stockAtEndDate * avgCost,
           potentialRevenue: stockAtEndDate * product.sellingPrice,
           firstRestockDate: firstRestockDate,
-          lastRestockDate: lastRestockDate
+          lastRestockDate: lastRestockDate,
+          dateAdded: product.createdAt
         };
       })
       .filter(item => item !== null)
@@ -318,6 +321,9 @@ const InventoryReportPage: React.FC = () => {
                     <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                       Product
                     </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Date Added
+                    </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
                       Opening Stock
                     </th>
@@ -347,7 +353,7 @@ const InventoryReportPage: React.FC = () => {
                 <tbody className="bg-white divide-y divide-slate-200">
                   {inventoryReport.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="px-6 py-8 text-center text-slate-500">
+                      <td colSpan={10} className="px-6 py-8 text-center text-slate-500">
                         No inventory data available for this period.
                       </td>
                     </tr>
@@ -356,6 +362,9 @@ const InventoryReportPage: React.FC = () => {
                       <tr key={item.productId} className="hover:bg-slate-50">
                         <td className="px-4 py-3 text-sm font-medium text-slate-900">
                           {item.productName}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600">
+                          {item.dateAdded ? format(parseISO(item.dateAdded), 'MMM dd, yyyy') : '-'}
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-700 text-right">
                           {item.openingStock}
@@ -391,7 +400,7 @@ const InventoryReportPage: React.FC = () => {
                       <td className="px-4 py-3 text-sm text-slate-900">
                         TOTAL
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-900 text-right" colSpan={4}></td>
+                      <td className="px-4 py-3 text-sm text-slate-900 text-right" colSpan={5}></td>
                       <td className="px-4 py-3 text-sm text-slate-900 text-right"></td>
                       <td className="px-4 py-3 text-sm text-slate-900 text-right">
                         {formatCurrency(totals.openingValue)}
@@ -412,6 +421,9 @@ const InventoryReportPage: React.FC = () => {
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                       Product Name
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Date Added
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                       First Added
@@ -439,7 +451,7 @@ const InventoryReportPage: React.FC = () => {
                 <tbody className="bg-white divide-y divide-slate-200">
                   {currentStockView.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-6 py-8 text-center text-slate-500">
+                      <td colSpan={9} className="px-6 py-8 text-center text-slate-500">
                         No products with stock on this date.
                       </td>
                     </tr>
@@ -448,6 +460,9 @@ const InventoryReportPage: React.FC = () => {
                         <tr key={item.id} className="hover:bg-slate-50">
                           <td className="px-4 py-3 text-sm font-medium text-slate-900">
                             {item.name}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-600">
+                            {item.dateAdded ? format(parseISO(item.dateAdded), 'MMM dd, yyyy') : '-'}
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-600">
                             {item.firstRestockDate ? format(parseISO(item.firstRestockDate), 'MMM dd, yyyy') : '-'}
@@ -480,7 +495,7 @@ const InventoryReportPage: React.FC = () => {
                       <td className="px-4 py-3 text-sm text-slate-900">
                         TOTAL
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-900 text-right" colSpan={5}></td>
+                      <td className="px-4 py-3 text-sm text-slate-900 text-right" colSpan={6}></td>
                       <td className="px-4 py-3 text-sm text-slate-900 text-right">
                         {formatCurrency(
                           currentStockView.reduce((sum, item) => sum + item.totalValue, 0)

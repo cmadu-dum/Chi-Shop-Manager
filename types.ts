@@ -8,6 +8,7 @@ export interface Product {
   weightedAvgCost?: number;
   lastRestockDate?: string;
   restockCount?: number;
+  createdAt?: string;
 }
 
 export interface RestockHistory {

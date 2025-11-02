@@ -18,7 +18,8 @@ export const productApi = {
       stock: product.stock,
       weightedAvgCost: product.weighted_avg_cost ? Number(product.weighted_avg_cost) : undefined,
       lastRestockDate: product.last_restock_date,
-      restockCount: product.restock_count
+      restockCount: product.restock_count,
+      createdAt: product.created_at
     }));
   },
 
@@ -56,7 +57,8 @@ export const productApi = {
       stock: data.stock,
       weightedAvgCost: Number(data.weighted_avg_cost),
       lastRestockDate: data.last_restock_date,
-      restockCount: data.restock_count
+      restockCount: data.restock_count,
+      createdAt: data.created_at
     };
   },
 
@@ -131,7 +133,8 @@ export const productApi = {
         stock: newStock,
         weightedAvgCost: newAvgCost,
         lastRestockDate: restockRecord.created_at,
-        restockCount: (product.restock_count || 0) + 1
+        restockCount: (product.restock_count || 0) + 1,
+        createdAt: product.created_at
       },
       restockHistory: {
         id: restockRecord.id,
@@ -174,7 +177,8 @@ export const productApi = {
       stock: data.stock,
       weightedAvgCost: data.weighted_avg_cost ? Number(data.weighted_avg_cost) : undefined,
       lastRestockDate: data.last_restock_date,
-      restockCount: data.restock_count
+      restockCount: data.restock_count,
+      createdAt: data.created_at
     };
   },
 
@@ -301,7 +305,8 @@ export const salesApi = {
         name: product.name,
         purchasePrice: Number(product.purchase_price),
         sellingPrice: Number(product.selling_price),
-        stock: newStock
+        stock: newStock,
+        createdAt: product.created_at
       },
       transaction: {
         id: transaction.id,

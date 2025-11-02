@@ -134,9 +134,13 @@ const InventoryReportPage: React.FC = () => {
 
         const productRestocks = restockHistory.filter(restock => restock.productId === product.id);
 
+        let firstRestockDate: string | null = null;
+        let lastRestockDate: string | null = null;
+
         if (productRestocks.length > 0) {
-          const firstRestockDate = productRestocks
-            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())[0]?.createdAt;
+          const sortedRestocks = productRestocks.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+          firstRestockDate = sortedRestocks[0].createdAt;
+          lastRestockDate = sortedRestocks[sortedRestocks.length - 1].createdAt;
 
           const productCreatedDate = parseISO(firstRestockDate);
           if (isAfter(productCreatedDate, reportEnd)) {
@@ -174,7 +178,9 @@ const InventoryReportPage: React.FC = () => {
           unitCost: avgCost,
           sellingPrice: product.sellingPrice,
           totalValue: stockAtEndDate * avgCost,
-          potentialRevenue: stockAtEndDate * product.sellingPrice
+          potentialRevenue: stockAtEndDate * product.sellingPrice,
+          firstRestockDate: firstRestockDate,
+          lastRestockDate: lastRestockDate
         };
       })
       .filter(item => item !== null)
@@ -407,6 +413,12 @@ const InventoryReportPage: React.FC = () => {
                     <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                       Product Name
                     </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      First Added
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Last Restock
+                    </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
                       Current Stock
                     </th>
@@ -427,7 +439,7 @@ const InventoryReportPage: React.FC = () => {
                 <tbody className="bg-white divide-y divide-slate-200">
                   {currentStockView.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                      <td colSpan={8} className="px-6 py-8 text-center text-slate-500">
                         No products with stock on this date.
                       </td>
                     </tr>
@@ -436,6 +448,12 @@ const InventoryReportPage: React.FC = () => {
                         <tr key={item.id} className="hover:bg-slate-50">
                           <td className="px-4 py-3 text-sm font-medium text-slate-900">
                             {item.name}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-600">
+                            {item.firstRestockDate ? format(parseISO(item.firstRestockDate), 'MMM dd, yyyy') : '-'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-600">
+                            {item.lastRestockDate ? format(parseISO(item.lastRestockDate), 'MMM dd, yyyy') : '-'}
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-900 text-right font-semibold">
                             {item.stockAtEndDate}
@@ -462,7 +480,7 @@ const InventoryReportPage: React.FC = () => {
                       <td className="px-4 py-3 text-sm text-slate-900">
                         TOTAL
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-900 text-right" colSpan={3}></td>
+                      <td className="px-4 py-3 text-sm text-slate-900 text-right" colSpan={5}></td>
                       <td className="px-4 py-3 text-sm text-slate-900 text-right">
                         {formatCurrency(
                           currentStockView.reduce((sum, item) => sum + item.totalValue, 0)

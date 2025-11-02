@@ -72,6 +72,13 @@ const InventoryReportPage: React.FC = () => {
     const movements: { [productId: string]: InventoryMovement } = {};
 
     products.forEach(product => {
+      if (!product.createdAt) return;
+
+      const productCreatedDate = parseISO(product.createdAt);
+      if (isAfter(productCreatedDate, reportEnd)) {
+        return;
+      }
+
       const currentStock = product.stock;
 
       const salesInPeriod = transactions.filter(tx => {

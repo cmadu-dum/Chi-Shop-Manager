@@ -25,6 +25,7 @@ const InventoryReportPage: React.FC = () => {
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [restockHistory, setRestockHistory] = useState<RestockHistory[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [viewMode, setViewMode] = useState<'summary' | 'detailed'>('summary');
 
   useEffect(() => {
     const loadRestockHistory = async () => {
@@ -143,42 +144,67 @@ const InventoryReportPage: React.FC = () => {
         <p className="text-slate-600 mb-6">View inventory movements and stock levels for a specific period.</p>
 
         <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end justify-between">
-            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="startDate" className="block text-sm font-medium text-slate-700 mb-2">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  id="startDate"
-                  value={startDate}
-                  max={endDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                />
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end justify-between">
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="startDate" className="block text-sm font-medium text-slate-700 mb-2">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    id="startDate"
+                    value={startDate}
+                    max={endDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="endDate" className="block text-sm font-medium text-slate-700 mb-2">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    id="endDate"
+                    value={endDate}
+                    min={startDate}
+                    max={format(new Date(), 'yyyy-MM-dd')}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  />
+                </div>
               </div>
-              <div>
-                <label htmlFor="endDate" className="block text-sm font-medium text-slate-700 mb-2">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  id="endDate"
-                  value={endDate}
-                  min={startDate}
-                  max={format(new Date(), 'yyyy-MM-dd')}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                />
-              </div>
+              <button
+                onClick={handlePrint}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors shadow-md"
+              >
+                Print Report
+              </button>
             </div>
-            <button
-              onClick={handlePrint}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors shadow-md"
-            >
-              Print Report
-            </button>
+
+            <div className="flex gap-2 border-t border-slate-200 pt-4">
+              <button
+                onClick={() => setViewMode('summary')}
+                className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-medium transition-colors ${
+                  viewMode === 'summary'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                Movement Summary
+              </button>
+              <button
+                onClick={() => setViewMode('detailed')}
+                className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-medium transition-colors ${
+                  viewMode === 'detailed'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                Current Stock
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -187,14 +213,18 @@ const InventoryReportPage: React.FC = () => {
         <div className="bg-white p-8 rounded-xl shadow-md border border-slate-200 print:shadow-none print:border-0">
           <div className="print:mb-8">
             <h3 className="text-2xl font-bold text-slate-900 mb-2 print:text-center">
-              Inventory Movement Report
+              {viewMode === 'summary' ? 'Inventory Movement Report' : 'Current Stock Levels'}
             </h3>
             <p className="text-slate-600 text-center mb-6">
-              Period: {format(parseISO(startDate), 'MMM dd, yyyy')} - {format(parseISO(endDate), 'MMM dd, yyyy')}
+              {viewMode === 'summary'
+                ? `Period: ${format(parseISO(startDate), 'MMM dd, yyyy')} - ${format(parseISO(endDate), 'MMM dd, yyyy')}`
+                : `As of ${format(parseISO(endDate), 'MMM dd, yyyy')}`
+              }
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 print:mb-6">
+          {viewMode === 'summary' && (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 print:mb-6">
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <p className="text-sm text-blue-600 font-medium mb-1">Opening Value</p>
               <p className="text-xl font-bold text-blue-900">{formatCurrency(totals.openingValue)}</p>
@@ -216,102 +246,184 @@ const InventoryReportPage: React.FC = () => {
               <p className="text-xl font-bold text-emerald-900">{formatCurrency(totals.closingValue)}</p>
             </div>
           </div>
+          )}
 
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Product
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Opening Stock
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Purchases
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Sales
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Closing Stock
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Unit Cost
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Opening Value
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Purchase Value
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Closing Value
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
-                {inventoryReport.length === 0 ? (
+            {viewMode === 'summary' ? (
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50">
                   <tr>
-                    <td colSpan={9} className="px-6 py-8 text-center text-slate-500">
-                      No inventory data available for this period.
-                    </td>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Product
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Opening Stock
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Purchases
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Sales
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Closing Stock
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Unit Cost
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Opening Value
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Purchase Value
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Closing Value
+                    </th>
                   </tr>
-                ) : (
-                  inventoryReport.map((item) => (
-                    <tr key={item.productId} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                        {item.productName}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-700 text-right">
-                        {item.openingStock}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-green-700 text-right font-medium">
-                        {item.purchases > 0 ? `+${item.purchases}` : '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-red-700 text-right font-medium">
-                        {item.sales > 0 ? `-${item.sales}` : '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-900 text-right font-semibold">
-                        {item.closingStock}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-700 text-right">
-                        {formatCurrency(item.unitCost)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-700 text-right">
-                        {formatCurrency(item.openingValue)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-700 text-right">
-                        {formatCurrency(item.purchaseValue)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-900 text-right font-semibold">
-                        {formatCurrency(item.closingValue)}
+                </thead>
+                <tbody className="bg-white divide-y divide-slate-200">
+                  {inventoryReport.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="px-6 py-8 text-center text-slate-500">
+                        No inventory data available for this period.
                       </td>
                     </tr>
-                  ))
+                  ) : (
+                    inventoryReport.map((item) => (
+                      <tr key={item.productId} className="hover:bg-slate-50">
+                        <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                          {item.productName}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-700 text-right">
+                          {item.openingStock}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-green-700 text-right font-medium">
+                          {item.purchases > 0 ? `+${item.purchases}` : '-'}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-red-700 text-right font-medium">
+                          {item.sales > 0 ? `-${item.sales}` : '-'}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-900 text-right font-semibold">
+                          {item.closingStock}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-700 text-right">
+                          {formatCurrency(item.unitCost)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-700 text-right">
+                          {formatCurrency(item.openingValue)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-700 text-right">
+                          {formatCurrency(item.purchaseValue)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-900 text-right font-semibold">
+                          {formatCurrency(item.closingValue)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+                {inventoryReport.length > 0 && (
+                  <tfoot className="bg-slate-100 font-bold">
+                    <tr>
+                      <td className="px-4 py-3 text-sm text-slate-900">
+                        TOTAL
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-900 text-right" colSpan={4}></td>
+                      <td className="px-4 py-3 text-sm text-slate-900 text-right"></td>
+                      <td className="px-4 py-3 text-sm text-slate-900 text-right">
+                        {formatCurrency(totals.openingValue)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-900 text-right">
+                        {formatCurrency(totals.purchaseValue)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-900 text-right">
+                        {formatCurrency(totals.closingValue)}
+                      </td>
+                    </tr>
+                  </tfoot>
                 )}
-              </tbody>
-              {inventoryReport.length > 0 && (
-                <tfoot className="bg-slate-100 font-bold">
+              </table>
+            ) : (
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50">
                   <tr>
-                    <td className="px-4 py-3 text-sm text-slate-900">
-                      TOTAL
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-900 text-right" colSpan={4}></td>
-                    <td className="px-4 py-3 text-sm text-slate-900 text-right"></td>
-                    <td className="px-4 py-3 text-sm text-slate-900 text-right">
-                      {formatCurrency(totals.openingValue)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-900 text-right">
-                      {formatCurrency(totals.purchaseValue)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-900 text-right">
-                      {formatCurrency(totals.closingValue)}
-                    </td>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Product Name
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Current Stock
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Unit Cost
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Selling Price
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Total Value
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Potential Revenue
+                    </th>
                   </tr>
-                </tfoot>
-              )}
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-slate-200">
+                  {products.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                        No products available.
+                      </td>
+                    </tr>
+                  ) : (
+                    products
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((product) => (
+                        <tr key={product.id} className="hover:bg-slate-50">
+                          <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                            {product.name}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-900 text-right font-semibold">
+                            {product.stock}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-700 text-right">
+                            {formatCurrency(product.weightedAvgCost || product.purchasePrice)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-700 text-right">
+                            {formatCurrency(product.sellingPrice)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-900 text-right font-semibold">
+                            {formatCurrency((product.weightedAvgCost || product.purchasePrice) * product.stock)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-700 text-right">
+                            {formatCurrency(product.sellingPrice * product.stock)}
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+                {products.length > 0 && (
+                  <tfoot className="bg-slate-100 font-bold">
+                    <tr>
+                      <td className="px-4 py-3 text-sm text-slate-900">
+                        TOTAL
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-900 text-right" colSpan={3}></td>
+                      <td className="px-4 py-3 text-sm text-slate-900 text-right">
+                        {formatCurrency(
+                          products.reduce((sum, p) => sum + (p.weightedAvgCost || p.purchasePrice) * p.stock, 0)
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-900 text-right">
+                        {formatCurrency(
+                          products.reduce((sum, p) => sum + p.sellingPrice * p.stock, 0)
+                        )}
+                      </td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            )}
           </div>
 
           <div className="hidden print:block mt-8 pt-4 border-t border-slate-200 text-xs text-slate-500 text-center">

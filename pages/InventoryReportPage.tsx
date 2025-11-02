@@ -132,17 +132,16 @@ const InventoryReportPage: React.FC = () => {
       .map(product => {
         const currentStock = product.stock;
 
-        const firstRestockDate = restockHistory
-          .filter(restock => restock.productId === product.id)
-          .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())[0]?.createdAt;
+        const productRestocks = restockHistory.filter(restock => restock.productId === product.id);
 
-        if (!firstRestockDate) {
-          return null;
-        }
+        if (productRestocks.length > 0) {
+          const firstRestockDate = productRestocks
+            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())[0]?.createdAt;
 
-        const productCreatedDate = parseISO(firstRestockDate);
-        if (isAfter(productCreatedDate, reportEnd)) {
-          return null;
+          const productCreatedDate = parseISO(firstRestockDate);
+          if (isAfter(productCreatedDate, reportEnd)) {
+            return null;
+          }
         }
 
         const salesAfterEndDate = transactions.filter(tx => {

@@ -125,6 +125,46 @@ const InventoryReportPage: React.FC = () => {
     }), { openingValue: 0, purchaseValue: 0, closingValue: 0, totalSales: 0, totalPurchases: 0 });
   }, [inventoryReport]);
 
+  const currentStockView = useMemo(() => {
+    const reportEnd = endOfDay(parseISO(endDate));
+
+    return products
+      .map(product => {
+        const currentStock = product.stock;
+
+        const salesAfterEndDate = transactions.filter(tx => {
+          if (!tx.productId || tx.productId !== product.id || tx.type !== 'sale') return false;
+          const txDate = parseISO(tx.date);
+          return isAfter(txDate, reportEnd);
+        });
+
+        const restocksAfterEndDate = restockHistory.filter(restock => {
+          if (restock.productId !== product.id) return false;
+          const restockDate = parseISO(restock.createdAt);
+          return isAfter(restockDate, reportEnd);
+        });
+
+        const salesAfter = salesAfterEndDate.reduce((sum, tx) => sum + (tx.quantity || 0), 0);
+        const purchasesAfter = restocksAfterEndDate.reduce((sum, restock) => sum + restock.quantityAdded, 0);
+
+        const stockAtEndDate = currentStock - purchasesAfter + salesAfter;
+
+        const avgCost = product.weightedAvgCost || product.purchasePrice;
+
+        return {
+          id: product.id,
+          name: product.name,
+          stockAtEndDate: stockAtEndDate,
+          unitCost: avgCost,
+          sellingPrice: product.sellingPrice,
+          totalValue: stockAtEndDate * avgCost,
+          potentialRevenue: stockAtEndDate * product.sellingPrice
+        };
+      })
+      .filter(item => item.stockAtEndDate > 0)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [products, transactions, restockHistory, endDate]);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
   };
@@ -369,40 +409,38 @@ const InventoryReportPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-200">
-                  {products.length === 0 ? (
+                  {currentStockView.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
-                        No products available.
+                        No products with stock on this date.
                       </td>
                     </tr>
                   ) : (
-                    products
-                      .sort((a, b) => a.name.localeCompare(b.name))
-                      .map((product) => (
-                        <tr key={product.id} className="hover:bg-slate-50">
+                    currentStockView.map((item) => (
+                        <tr key={item.id} className="hover:bg-slate-50">
                           <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                            {product.name}
+                            {item.name}
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-900 text-right font-semibold">
-                            {product.stock}
+                            {item.stockAtEndDate}
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-700 text-right">
-                            {formatCurrency(product.weightedAvgCost || product.purchasePrice)}
+                            {formatCurrency(item.unitCost)}
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-700 text-right">
-                            {formatCurrency(product.sellingPrice)}
+                            {formatCurrency(item.sellingPrice)}
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-900 text-right font-semibold">
-                            {formatCurrency((product.weightedAvgCost || product.purchasePrice) * product.stock)}
+                            {formatCurrency(item.totalValue)}
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-700 text-right">
-                            {formatCurrency(product.sellingPrice * product.stock)}
+                            {formatCurrency(item.potentialRevenue)}
                           </td>
                         </tr>
                       ))
                   )}
                 </tbody>
-                {products.length > 0 && (
+                {currentStockView.length > 0 && (
                   <tfoot className="bg-slate-100 font-bold">
                     <tr>
                       <td className="px-4 py-3 text-sm text-slate-900">
@@ -411,12 +449,12 @@ const InventoryReportPage: React.FC = () => {
                       <td className="px-4 py-3 text-sm text-slate-900 text-right" colSpan={3}></td>
                       <td className="px-4 py-3 text-sm text-slate-900 text-right">
                         {formatCurrency(
-                          products.reduce((sum, p) => sum + (p.weightedAvgCost || p.purchasePrice) * p.stock, 0)
+                          currentStockView.reduce((sum, item) => sum + item.totalValue, 0)
                         )}
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-900 text-right">
                         {formatCurrency(
-                          products.reduce((sum, p) => sum + p.sellingPrice * p.stock, 0)
+                          currentStockView.reduce((sum, item) => sum + item.potentialRevenue, 0)
                         )}
                       </td>
                     </tr>

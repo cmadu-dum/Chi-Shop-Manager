@@ -92,19 +92,23 @@ const InventoryReportPage: React.FC = () => {
 
       const avgCost = product.weightedAvgCost || product.purchasePrice;
 
-      movements[product.id] = {
-        productId: product.id,
-        productName: product.name,
-        openingStock: Math.max(0, openingStock),
-        purchases: totalPurchases,
-        sales: totalSales,
-        closingStock: closingStock,
-        unitCost: avgCost,
-        unitPrice: product.sellingPrice,
-        openingValue: Math.max(0, openingStock) * avgCost,
-        purchaseValue: restocksInPeriod.reduce((sum, r) => sum + (r.quantityAdded * r.purchasePrice), 0),
-        closingValue: closingStock * avgCost
-      };
+      const hasActivity = openingStock > 0 || totalPurchases > 0 || totalSales > 0;
+
+      if (hasActivity) {
+        movements[product.id] = {
+          productId: product.id,
+          productName: product.name,
+          openingStock: Math.max(0, openingStock),
+          purchases: totalPurchases,
+          sales: totalSales,
+          closingStock: closingStock,
+          unitCost: avgCost,
+          unitPrice: product.sellingPrice,
+          openingValue: Math.max(0, openingStock) * avgCost,
+          purchaseValue: restocksInPeriod.reduce((sum, r) => sum + (r.quantityAdded * r.purchasePrice), 0),
+          closingValue: closingStock * avgCost
+        };
+      }
     });
 
     return Object.values(movements).sort((a, b) => a.productName.localeCompare(b.productName));

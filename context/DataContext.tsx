@@ -28,26 +28,33 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const [storedTransactions, storedProducts] = await Promise.all([
-            transactionApi.getAll(),
-            productApi.getAll()
-        ]);
-        setTransactions(storedTransactions);
-        setProducts(storedProducts);
-      } catch (e) {
-        setError('Failed to load data.');
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [storedTransactions, storedProducts] = await Promise.all([
+          transactionApi.getAll(),
+          productApi.getAll()
+      ]);
+      setTransactions(storedTransactions);
+      setProducts(storedProducts);
+    } catch (e) {
+      setError('Failed to load data.');
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadData();
+
+    const interval = setInterval(() => {
+      loadData();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [loadData]);
 
   const addTransaction = useCallback(async (transaction: Omit<Transaction, 'id' | 'date' | 'productId' | 'quantity' | 'profit'>) => {
     try {

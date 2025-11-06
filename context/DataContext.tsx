@@ -28,9 +28,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
       setError(null);
       const [storedTransactions, storedProducts] = await Promise.all([
           transactionApi.getAll(),
@@ -42,15 +44,17 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setError('Failed to load data.');
       console.error(e);
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    loadData();
+    loadData(true);
 
     const interval = setInterval(() => {
-      loadData();
+      loadData(false);
     }, 1000);
 
     return () => clearInterval(interval);

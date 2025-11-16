@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useData } from '../hooks/useData';
 import { calculateProductDemand, getRestockRecommendations } from '../utils/demandForecast';
 import { TrendingUpIcon, TrendingDownIcon, MinusIcon, AlertTriangleIcon, CheckCircleIcon } from '../components/icons';
+import DemandForecastChart from '../components/DemandForecastChart';
 
 const DemandForecastPage: React.FC = () => {
   const { products, transactions, loading } = useData();
@@ -88,6 +89,10 @@ const DemandForecastPage: React.FC = () => {
             {demands.filter(d => d.salesLast30Days === 0).length}
           </p>
         </div>
+      </div>
+
+      <div className="mb-8">
+        <DemandForecastChart demands={demands} />
       </div>
 
       {prioritize.length > 0 && (

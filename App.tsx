@@ -12,6 +12,7 @@ import ProductsPage from './pages/ProductsPage';
 import SellPage from './pages/SellPage';
 import InventoryReportPage from './pages/InventoryReportPage';
 import LowStockPage from './pages/LowStockPage';
+import DemandForecastPage from './pages/DemandForecastPage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
 
@@ -38,6 +39,7 @@ const App: React.FC = () => {
                         <Route path="/sell" element={<SellPage />} />
                         <Route path="/inventory-report" element={<InventoryReportPage />} />
                         <Route path="/low-stock" element={<LowStockPage />} />
+                        <Route path="/demand-forecast" element={<DemandForecastPage />} />
                       </Routes>
                     </main>
                   </div>

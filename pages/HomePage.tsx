@@ -4,7 +4,7 @@ import { useData } from '../hooks/useData';
 import SummaryCard from '../components/SummaryCard';
 import TransactionList from '../components/TransactionList';
 import { Link } from 'react-router-dom';
-import { AlertTriangleIcon, BoxIcon } from '../components/icons';
+import { AlertTriangleIcon, BoxIcon, ActivityIcon } from '../components/icons';
 import type { Transaction } from '../types';
 
 const HomePage: React.FC = () => {
@@ -69,12 +69,21 @@ const HomePage: React.FC = () => {
                   </div>
                 ))}
               </div>
-              <Link
-                to="/products"
-                className="inline-block bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors shadow-md"
-              >
-                Manage Inventory
-              </Link>
+              <div className="flex gap-3">
+                <Link
+                  to="/products"
+                  className="inline-block bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors shadow-md"
+                >
+                  Manage Inventory
+                </Link>
+                <Link
+                  to="/demand-forecast"
+                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors shadow-md"
+                >
+                  <ActivityIcon className="h-5 w-5" />
+                  View Demand Forecast
+                </Link>
+              </div>
             </div>
           </div>
         </div>

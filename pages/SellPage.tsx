@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../hooks/useData';
 import BarcodeScanner from '../components/BarcodeScanner';
+import CameraScanner from '../components/CameraScanner';
 import { Product } from '../types';
 
 const SellPage: React.FC = () => {
@@ -15,6 +16,7 @@ const SellPage: React.FC = () => {
     const [success, setSuccess] = useState('');
     const [manualBarcode, setManualBarcode] = useState('');
     const [scanMode, setScanMode] = useState<'dropdown' | 'scan'>('dropdown');
+    const [showCameraScanner, setShowCameraScanner] = useState(false);
     const barcodeInputRef = useRef<HTMLInputElement>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -87,6 +89,23 @@ const SellPage: React.FC = () => {
         setError('');
         setSuccess('');
         setManualBarcode('');
+    };
+
+    const handleCameraScan = (barcode: string) => {
+        setShowCameraScanner(false);
+        const product = products.find(p => p.barcode === barcode);
+
+        if (product) {
+            if (product.stock <= 0) {
+                setError(`Product "${product.name}" is out of stock`);
+            } else {
+                setSelectedProduct(product.id);
+                setSuccess(`Product found: ${product.name}`);
+                setTimeout(() => setSuccess(''), 2000);
+            }
+        } else {
+            setError(`No product found with barcode: ${barcode}`);
+        }
     };
 
     const product = products.find(p => p.id === selectedProduct);
@@ -175,9 +194,20 @@ const SellPage: React.FC = () => {
                                         >
                                             Search
                                         </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowCameraScanner(true)}
+                                            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-1"
+                                            title="Scan with camera"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                        </button>
                                     </div>
                                     <p className="text-xs text-slate-500 mt-2">
-                                        Use a barcode scanner or type the barcode manually
+                                        Use a barcode scanner, type manually, or scan with camera
                                     </p>
                                     {product && (
                                         <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
@@ -252,6 +282,13 @@ const SellPage: React.FC = () => {
                     products={products}
                     onProductScanned={handleProductScanned}
                     onError={handleScanError}
+                />
+            )}
+
+            {showCameraScanner && (
+                <CameraScanner
+                    onScanSuccess={handleCameraScan}
+                    onClose={() => setShowCameraScanner(false)}
                 />
             )}
         </div>

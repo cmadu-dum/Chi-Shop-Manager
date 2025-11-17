@@ -1,9 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useData } from '../hooks/useData';
 import { LOW_STOCK_THRESHOLD } from '../constants';
 import { AlertTriangleIcon } from '../components/icons';
 import { calculateProfitMargin } from '../utils/priceCalculations';
+import { parseImportFile, ImportedProduct } from '../utils/importParser';
+import ImportPreviewModal from '../components/ImportPreviewModal';
 
 const ProductsPage: React.FC = () => {
     const { products, addProduct, restockProduct, loading } = useData();
@@ -18,6 +20,10 @@ const ProductsPage: React.FC = () => {
     const [restockPurchasePrice, setRestockPurchasePrice] = useState('');
     const [restockSellingPrice, setRestockSellingPrice] = useState('');
     const [restockNotes, setRestockNotes] = useState('');
+    const [importedProducts, setImportedProducts] = useState<ImportedProduct[]>([]);
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [importing, setImporting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handlePurchasePriceChange = (value: string) => {
         setPurchasePrice(value);
@@ -121,11 +127,127 @@ const ProductsPage: React.FC = () => {
         }
     };
 
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setError('');
+        setSuccess('');
+        setImporting(true);
+
+        try {
+            const result = await parseImportFile(file);
+
+            if (!result.success) {
+                setError(result.errors.join('; '));
+                setImporting(false);
+                return;
+            }
+
+            if (result.products.length === 0) {
+                setError('No valid products found in the file');
+                setImporting(false);
+                return;
+            }
+
+            setImportedProducts(result.products);
+            setShowImportModal(true);
+        } catch (err) {
+            setError('Failed to read file. Please try again.');
+        } finally {
+            setImporting(false);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+    };
+
+    const handleImportConfirm = async (productsToImport: ImportedProduct[]) => {
+        setShowImportModal(false);
+        setError('');
+        setSuccess('');
+        setImporting(true);
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        try {
+            for (const product of productsToImport) {
+                try {
+                    if (product.status === 'update' && product.existingProductId) {
+                        await restockProduct(
+                            product.existingProductId,
+                            product.stock,
+                            product.purchasePrice,
+                            product.sellingPrice,
+                            'Imported via file upload'
+                        );
+                    } else {
+                        await addProduct({
+                            name: product.name,
+                            purchasePrice: product.purchasePrice,
+                            sellingPrice: product.sellingPrice,
+                            stock: product.stock
+                        });
+                    }
+                    successCount++;
+                } catch (err) {
+                    errorCount++;
+                    console.error(`Failed to import product: ${product.name}`, err);
+                }
+            }
+
+            if (successCount > 0) {
+                setSuccess(`Successfully imported ${successCount} product(s)${errorCount > 0 ? `, ${errorCount} failed` : ''}`);
+            }
+            if (errorCount > 0 && successCount === 0) {
+                setError(`Failed to import ${errorCount} product(s)`);
+            }
+        } finally {
+            setImporting(false);
+            setImportedProducts([]);
+        }
+    };
+
+    const handleImportCancel = () => {
+        setShowImportModal(false);
+        setImportedProducts([]);
+    };
+
+    const triggerFileInput = () => {
+        fileInputRef.current?.click();
+    };
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1">
                 <h2 className="text-3xl font-bold text-slate-900 mb-2">Add Product</h2>
-                <p className="text-slate-600 mb-8">Add a new item to your inventory.</p>
+                <p className="text-slate-600 mb-4">Add a new item to your inventory.</p>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <h3 className="font-semibold text-blue-900 mb-2">Bulk Import</h3>
+                    <p className="text-sm text-blue-800 mb-3">
+                        Import multiple products from Excel or CSV file
+                    </p>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".csv,.xlsx,.xls"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                    />
+                    <button
+                        onClick={triggerFileInput}
+                        disabled={importing}
+                        className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors"
+                    >
+                        {importing ? 'Processing...' : 'Choose File to Import'}
+                    </button>
+                    <p className="text-xs text-blue-700 mt-2">
+                        Supported formats: CSV, Excel (.xlsx, .xls)
+                    </p>
+                </div>
+
                 <div className="bg-white p-8 rounded-xl shadow-md border border-slate-200 sticky top-24">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
@@ -277,6 +399,14 @@ const ProductsPage: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            <ImportPreviewModal
+                isOpen={showImportModal}
+                importedProducts={importedProducts}
+                existingProducts={products}
+                onClose={handleImportCancel}
+                onConfirm={handleImportConfirm}
+            />
         </div>
     );
 };

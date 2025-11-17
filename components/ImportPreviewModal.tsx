@@ -187,56 +187,72 @@ const ImportPreviewModal: React.FC<ImportPreviewModalProps> = ({
                         <div className="text-sm text-red-600">{product.errorMessage}</div>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Product Name
-                          </label>
-                          <input
-                            type="text"
-                            value={product.name}
-                            onChange={(e) => handleEditProduct(index, 'name', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          />
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Product Name
+                            </label>
+                            <input
+                              type="text"
+                              value={product.name}
+                              onChange={(e) => handleEditProduct(index, 'name', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Barcode (Optional)
+                            </label>
+                            <input
+                              type="text"
+                              value={product.barcode || ''}
+                              onChange={(e) => handleEditProduct(index, 'barcode', e.target.value || undefined)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="e.g., 123456789012"
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Purchase Price (₦)
-                          </label>
-                          <input
-                            type="number"
-                            value={product.purchasePrice}
-                            onChange={(e) => handleEditProduct(index, 'purchasePrice', Number(e.target.value))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            min="0"
-                            step="0.01"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Selling Price (₦)
-                          </label>
-                          <input
-                            type="number"
-                            value={product.sellingPrice}
-                            onChange={(e) => handleEditProduct(index, 'sellingPrice', Number(e.target.value))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            min="0"
-                            step="0.01"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Stock Quantity
-                          </label>
-                          <input
-                            type="number"
-                            value={product.stock}
-                            onChange={(e) => handleEditProduct(index, 'stock', Number(e.target.value))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            min="0"
-                            step="1"
-                          />
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Purchase Price (₦)
+                            </label>
+                            <input
+                              type="number"
+                              value={product.purchasePrice}
+                              onChange={(e) => handleEditProduct(index, 'purchasePrice', Number(e.target.value))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              min="0"
+                              step="0.01"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Selling Price (₦)
+                            </label>
+                            <input
+                              type="number"
+                              value={product.sellingPrice}
+                              onChange={(e) => handleEditProduct(index, 'sellingPrice', Number(e.target.value))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              min="0"
+                              step="0.01"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Stock Quantity
+                            </label>
+                            <input
+                              type="number"
+                              value={product.stock}
+                              onChange={(e) => handleEditProduct(index, 'stock', Number(e.target.value))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              min="0"
+                              step="1"
+                            />
+                          </div>
                         </div>
                       </div>
                     )}

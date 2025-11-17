@@ -1,7 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../hooks/useData';
+import BarcodeScanner from '../components/BarcodeScanner';
+import { Product } from '../types';
 
 const SellPage: React.FC = () => {
     const { products, sellProduct } = useData();
@@ -11,6 +13,9 @@ const SellPage: React.FC = () => {
     const [quantity, setQuantity] = useState('1');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [manualBarcode, setManualBarcode] = useState('');
+    const [scanMode, setScanMode] = useState<'dropdown' | 'scan'>('dropdown');
+    const barcodeInputRef = useRef<HTMLInputElement>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -41,6 +46,49 @@ const SellPage: React.FC = () => {
         }
     };
 
+    const handleProductScanned = (product: Product) => {
+        setSelectedProduct(product.id);
+        setError('');
+        setSuccess('');
+        setManualBarcode('');
+    };
+
+    const handleScanError = (errorMsg: string) => {
+        setError(errorMsg);
+        setTimeout(() => setError(''), 3000);
+    };
+
+    const handleManualBarcodeSearch = () => {
+        if (!manualBarcode.trim()) {
+            setError('Please enter a barcode');
+            return;
+        }
+
+        const product = products.find(p => p.barcode === manualBarcode.trim());
+
+        if (product) {
+            if (product.stock <= 0) {
+                setError(`Product "${product.name}" is out of stock`);
+            } else {
+                setSelectedProduct(product.id);
+                setError('');
+                setSuccess(`Product found: ${product.name}`);
+                setTimeout(() => setSuccess(''), 2000);
+            }
+        } else {
+            setError(`No product found with barcode: ${manualBarcode}`);
+        }
+
+        setManualBarcode('');
+    };
+
+    const toggleScanMode = (mode: 'dropdown' | 'scan') => {
+        setScanMode(mode);
+        setError('');
+        setSuccess('');
+        setManualBarcode('');
+    };
+
     const product = products.find(p => p.id === selectedProduct);
 
     return (
@@ -50,28 +98,99 @@ const SellPage: React.FC = () => {
         
             <div className="bg-white p-8 rounded-xl shadow-md border border-slate-200">
                 {products.length > 0 ? (
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label htmlFor="product" className="block text-sm font-medium text-slate-700 mb-1">
-                                Product
-                            </label>
-                            <select
-                                id="product"
-                                value={selectedProduct}
-                                onChange={(e) => {
-                                    setSelectedProduct(e.target.value);
-                                    setError('');
-                                    setSuccess('');
-                                }}
-                                className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    <>
+                        <div className="mb-6 flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => toggleScanMode('dropdown')}
+                                className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                                    scanMode === 'dropdown'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                }`}
                             >
-                                {products.map((p) => (
-                                    <option key={p.id} value={p.id}>
-                                        {p.name} ({p.stock} in stock)
-                                    </option>
-                                ))}
-                            </select>
+                                Select Product
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => toggleScanMode('scan')}
+                                className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                                    scanMode === 'scan'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                }`}
+                            >
+                                Scan Barcode
+                            </button>
                         </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            {scanMode === 'dropdown' ? (
+                                <div>
+                                    <label htmlFor="product" className="block text-sm font-medium text-slate-700 mb-1">
+                                        Product
+                                    </label>
+                                    <select
+                                        id="product"
+                                        value={selectedProduct}
+                                        onChange={(e) => {
+                                            setSelectedProduct(e.target.value);
+                                            setError('');
+                                            setSuccess('');
+                                        }}
+                                        className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                    >
+                                        {products.map((p) => (
+                                            <option key={p.id} value={p.id}>
+                                                {p.name} ({p.stock} in stock)
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            ) : (
+                                <div>
+                                    <label htmlFor="barcode" className="block text-sm font-medium text-slate-700 mb-1">
+                                        Enter or Scan Barcode
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            ref={barcodeInputRef}
+                                            type="text"
+                                            id="barcode"
+                                            value={manualBarcode}
+                                            onChange={(e) => setManualBarcode(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    handleManualBarcodeSearch();
+                                                }
+                                            }}
+                                            className="block flex-1 rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                            placeholder="Scan or type barcode"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleManualBarcodeSearch}
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                                        >
+                                            Search
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-slate-500 mt-2">
+                                        Use a barcode scanner or type the barcode manually
+                                    </p>
+                                    {product && (
+                                        <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
+                                            <p className="text-sm font-semibold text-green-800">
+                                                Selected: {product.name}
+                                            </p>
+                                            <p className="text-xs text-green-600">
+                                                Stock: {product.stock} | Price: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(product.sellingPrice)}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                         <div>
                             <label htmlFor="quantity" className="block text-sm font-medium text-slate-700 mb-1">
@@ -117,6 +236,7 @@ const SellPage: React.FC = () => {
                             </button>
                         </div>
                     </form>
+                    </>
                 ) : (
                     <div className="text-center">
                         <p className="text-slate-600">You need to add a product to your inventory before you can sell anything.</p>
@@ -126,6 +246,14 @@ const SellPage: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {scanMode === 'scan' && (
+                <BarcodeScanner
+                    products={products}
+                    onProductScanned={handleProductScanned}
+                    onError={handleScanError}
+                />
+            )}
         </div>
     );
 };

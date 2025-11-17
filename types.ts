@@ -5,6 +5,7 @@ export interface Product {
   purchasePrice: number;
   sellingPrice: number;
   stock: number;
+  barcode?: string;
   weightedAvgCost?: number;
   lastRestockDate?: string;
   restockCount?: number;

@@ -13,6 +13,7 @@ const ProductsPage: React.FC = () => {
     const [purchasePrice, setPurchasePrice] = useState('');
     const [sellingPrice, setSellingPrice] = useState('');
     const [stock, setStock] = useState('');
+    const [barcode, setBarcode] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [restockingProductId, setRestockingProductId] = useState<string | null>(null);
@@ -67,13 +68,15 @@ const ProductsPage: React.FC = () => {
                 name,
                 purchasePrice: pp,
                 sellingPrice: sp,
-                stock: st
+                stock: st,
+                barcode: barcode.trim() || undefined
             });
             setSuccess(`Product "${name}" added successfully!`);
             setName('');
             setPurchasePrice('');
             setSellingPrice('');
             setStock('');
+            setBarcode('');
         } catch (err) {
             setError('Failed to add product. Please try again.');
         }
@@ -187,7 +190,8 @@ const ProductsPage: React.FC = () => {
                             name: product.name,
                             purchasePrice: product.purchasePrice,
                             sellingPrice: product.sellingPrice,
-                            stock: product.stock
+                            stock: product.stock,
+                            barcode: product.barcode
                         });
                     }
                     successCount++;
@@ -267,6 +271,10 @@ const ProductsPage: React.FC = () => {
                         <div>
                             <label htmlFor="stock" className="block text-sm font-medium text-slate-700 mb-1">Initial Stock Quantity</label>
                             <input type="number" id="stock" value={stock} onChange={e => setStock(e.target.value)} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="50" step="1"/>
+                        </div>
+                        <div>
+                            <label htmlFor="barcode" className="block text-sm font-medium text-slate-700 mb-1">Barcode <span className="text-xs text-slate-500">(optional)</span></label>
+                            <input type="text" id="barcode" value={barcode} onChange={e => setBarcode(e.target.value)} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="e.g., 123456789012"/>
                         </div>
                         {error && <p className="text-sm text-red-600">{error}</p>}
                         {success && <p className="text-sm text-green-600">{success}</p>}

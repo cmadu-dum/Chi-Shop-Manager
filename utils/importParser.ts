@@ -6,6 +6,7 @@ export interface ImportedProduct {
   purchasePrice: number;
   sellingPrice: number;
   stock: number;
+  barcode?: string;
   status: 'new' | 'update' | 'error';
   errorMessage?: string;
   existingProductId?: string;
@@ -58,6 +59,7 @@ function parseRow(row: RawImportRow, index: number): ImportedProduct {
   const purchasePrice = extractValue(row, ['purchasePrice', 'purchase_price', 'cost', 'purchaseprice', 'buyprice']);
   const sellingPrice = extractValue(row, ['sellingPrice', 'selling_price', 'price', 'sellingprice', 'sellprice', 'saleprice']);
   const stock = extractValue(row, ['stock', 'quantity', 'qty', 'amount']);
+  const barcode = extractValue(row, ['barcode', 'code', 'sku', 'upc', 'ean']);
 
   const errors: string[] = [];
 
@@ -83,6 +85,7 @@ function parseRow(row: RawImportRow, index: number): ImportedProduct {
       purchasePrice: 0,
       sellingPrice: 0,
       stock: 0,
+      barcode: barcode ? String(barcode).trim() : undefined,
       status: 'error',
       errorMessage: errors.join('; ')
     };
@@ -93,6 +96,7 @@ function parseRow(row: RawImportRow, index: number): ImportedProduct {
     purchasePrice: Number(purchasePrice),
     sellingPrice: Number(sellingPrice),
     stock: Number(stock),
+    barcode: barcode ? String(barcode).trim() : undefined,
     status: 'new'
   };
 }

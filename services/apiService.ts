@@ -16,6 +16,7 @@ export const productApi = {
       purchasePrice: Number(product.purchase_price),
       sellingPrice: Number(product.selling_price),
       stock: product.stock,
+      barcode: product.barcode,
       weightedAvgCost: product.weighted_avg_cost ? Number(product.weighted_avg_cost) : undefined,
       lastRestockDate: product.last_restock_date,
       restockCount: product.restock_count,
@@ -41,6 +42,7 @@ export const productApi = {
         purchase_price: product.purchasePrice,
         selling_price: product.sellingPrice,
         stock: product.stock,
+        barcode: product.barcode || null,
         weighted_avg_cost: product.purchasePrice,
         restock_count: 0
       })
@@ -55,6 +57,7 @@ export const productApi = {
       purchasePrice: Number(data.purchase_price),
       sellingPrice: Number(data.selling_price),
       stock: data.stock,
+      barcode: data.barcode,
       weightedAvgCost: Number(data.weighted_avg_cost),
       lastRestockDate: data.last_restock_date,
       restockCount: data.restock_count,
@@ -175,6 +178,7 @@ export const productApi = {
       purchasePrice: Number(data.purchase_price),
       sellingPrice: Number(data.selling_price),
       stock: data.stock,
+      barcode: data.barcode,
       weightedAvgCost: data.weighted_avg_cost ? Number(data.weighted_avg_cost) : undefined,
       lastRestockDate: data.last_restock_date,
       restockCount: data.restock_count,

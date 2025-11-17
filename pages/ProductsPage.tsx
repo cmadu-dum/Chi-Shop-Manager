@@ -7,6 +7,8 @@ import { calculateProfitMargin } from '../utils/priceCalculations';
 import { parseImportFile, ImportedProduct } from '../utils/importParser';
 import ImportPreviewModal from '../components/ImportPreviewModal';
 import CameraScanner from '../components/CameraScanner';
+import BarcodeDisplay from '../components/BarcodeDisplay';
+import { generateEAN13Barcode } from '../utils/barcodeGenerator';
 
 const ProductsPage: React.FC = () => {
     const { products, addProduct, restockProduct, loading } = useData();
@@ -27,6 +29,7 @@ const ProductsPage: React.FC = () => {
     const [importing, setImporting] = useState(false);
     const [showCameraScanner, setShowCameraScanner] = useState(false);
     const [cameraScanContext, setCameraScanContext] = useState<'add' | 'restock' | null>(null);
+    const [viewingBarcodeProductId, setViewingBarcodeProductId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handlePurchasePriceChange = (value: string) => {
@@ -249,6 +252,59 @@ const ProductsPage: React.FC = () => {
         setShowCameraScanner(true);
     };
 
+    const handleGenerateBarcode = async (productId: string) => {
+        const product = products.find(p => p.id === productId);
+        if (!product) return;
+
+        if (product.barcode) {
+            setViewingBarcodeProductId(productId);
+            return;
+        }
+
+        const newBarcode = generateEAN13Barcode();
+        try {
+            const { productApi } = await import('../services/apiService');
+            await productApi.update(productId, { barcode: newBarcode });
+            setSuccess(`Barcode generated for ${product.name}`);
+            setTimeout(() => setSuccess(''), 2000);
+            setViewingBarcodeProductId(productId);
+        } catch (err) {
+            setError('Failed to generate barcode');
+        }
+    };
+
+    const handleGenerateAllBarcodes = async () => {
+        const productsWithoutBarcodes = products.filter(p => !p.barcode);
+        if (productsWithoutBarcodes.length === 0) {
+            setSuccess('All products already have barcodes!');
+            setTimeout(() => setSuccess(''), 2000);
+            return;
+        }
+
+        setError('');
+        const { productApi } = await import('../services/apiService');
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const product of productsWithoutBarcodes) {
+            try {
+                const newBarcode = generateEAN13Barcode();
+                await productApi.update(product.id, { barcode: newBarcode });
+                successCount++;
+            } catch (err) {
+                errorCount++;
+                console.error(`Failed to generate barcode for ${product.name}`, err);
+            }
+        }
+
+        if (successCount > 0) {
+            setSuccess(`Generated ${successCount} barcode(s)${errorCount > 0 ? `, ${errorCount} failed` : ''}`);
+        }
+        if (errorCount > 0 && successCount === 0) {
+            setError(`Failed to generate ${errorCount} barcode(s)`);
+        }
+    };
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1">
@@ -330,16 +386,28 @@ const ProductsPage: React.FC = () => {
                         <h2 className="text-3xl font-bold text-slate-900 mb-2">Current Inventory</h2>
                         <p className="text-slate-600">A list of all products in your shop.</p>
                     </div>
-                    <button
-                        onClick={() => openCameraScanner('restock')}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        Scan to Restock
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleGenerateAllBarcodes}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                            title="Generate barcodes for all products without one"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            Generate Barcodes
+                        </button>
+                        <button
+                            onClick={() => openCameraScanner('restock')}
+                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Scan to Restock
+                        </button>
+                    </div>
                 </div>
                 <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
                     {loading ? <p className="p-4 text-slate-500">Loading products...</p> : (
@@ -356,7 +424,14 @@ const ProductsPage: React.FC = () => {
                                 <li key={p.id} className={`p-4 ${isLowStock ? 'bg-orange-50' : ''}`}>
                                     <div className="flex items-center justify-between">
                                         <div className="flex-1">
-                                            <p className="font-bold text-slate-800">{p.name}</p>
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-bold text-slate-800">{p.name}</p>
+                                                {p.barcode && (
+                                                    <span className="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded">
+                                                        {p.barcode}
+                                                    </span>
+                                                )}
+                                            </div>
                                             <p className="text-sm text-slate-500">
                                                 <span>Price: <span className="font-medium text-slate-700">{formatCurrency(p.sellingPrice)}</span></span> &bull;
                                                 <span> Cost: <span className="font-medium text-slate-700">{formatCurrency(p.purchasePrice)}</span></span> &bull;
@@ -371,18 +446,43 @@ const ProductsPage: React.FC = () => {
                                         <div className="text-right ml-4">
                                             <p className={`font-bold text-lg ${isLowStock ? 'text-orange-600' : 'text-slate-800'}`}>{p.stock}</p>
                                             <p className="text-sm text-slate-500">in stock</p>
-                                            <button
-                                                onClick={() => startRestock(p.id, p.purchasePrice, p.sellingPrice)}
-                                                className="mt-2 text-xs text-blue-600 hover:text-blue-800 font-medium"
-                                            >
-                                                + Restock
-                                            </button>
+                                            <div className="mt-2 flex flex-col gap-1">
+                                                <button
+                                                    onClick={() => startRestock(p.id, p.purchasePrice, p.sellingPrice)}
+                                                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                                >
+                                                    + Restock
+                                                </button>
+                                                <button
+                                                    onClick={() => handleGenerateBarcode(p.id)}
+                                                    className="text-xs text-green-600 hover:text-green-800 font-medium"
+                                                >
+                                                    {p.barcode ? 'View Barcode' : 'Generate Barcode'}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                     {isLowStock && (
                                         <div className="mt-2 text-xs text-orange-700 flex items-center gap-1">
                                             <AlertTriangleIcon className="h-4 w-4" />
                                             <span>Low stock, restock needed.</span>
+                                        </div>
+                                    )}
+                                    {viewingBarcodeProductId === p.id && p.barcode && (
+                                        <div className="mt-4 p-4 bg-white border border-slate-300 rounded-lg">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h4 className="font-semibold text-slate-800">Barcode for {p.name}</h4>
+                                                <button
+                                                    onClick={() => setViewingBarcodeProductId(null)}
+                                                    className="text-slate-500 hover:text-slate-700"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                            <BarcodeDisplay
+                                                value={p.barcode}
+                                                productName={p.name}
+                                            />
                                         </div>
                                     )}
                                 </li>

@@ -17,6 +17,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "html5-qrcode": "^2.3.8",
+    "jsbarcode": "^3.12.1",
     "localforage": "^1.10.0",
     "papaparse": "^5.5.3",
     "react": "^19.1.1",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.4",
+    "@types/jsbarcode": "^3.11.4",
     "@types/node": "^22.14.0",
     "@types/papaparse": "^5.5.0",
     "@vitejs/plugin-react": "^5.0.0",
